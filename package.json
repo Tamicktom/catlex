@@ -1,0 +1,35 @@
+{
+  "name": "catlex",
+  "version": "0.1.0",
+  "description": "CLI to validate next-intl translation JSON files against a base locale",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "catlex": "./src/bin/catlex.ts"
+  },
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/bin/catlex.ts",
+    "validate": "bun run src/bin/catlex.ts validate",
+    "test": "bun test",
+    "build": "bun build ./src/bin/catlex.ts --outdir dist --target bun --packages=external"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "ink": "^6.6.0",
+    "react": "^19.2.3",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.9",
+    "react-devtools-core": "^7.0.1",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
