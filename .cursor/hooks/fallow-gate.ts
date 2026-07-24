@@ -40,15 +40,11 @@ if (!/(^|[\s;|&()])git\s+(commit|push)([\s]|$)/.test(command)) {
   allow();
 }
 
-const audit = spawnSync(
-  "bun",
-  ["run", "fallow:audit"],
-  {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024,
-  },
-);
+const audit = spawnSync("bun", ["run", "fallow:audit"], {
+  cwd: process.cwd(),
+  encoding: "utf8",
+  maxBuffer: 10 * 1024 * 1024,
+});
 
 const stdout = audit.stdout?.toString() ?? "";
 let result: AuditOutput = {};
@@ -56,9 +52,7 @@ try {
   result = JSON.parse(stdout) as AuditOutput;
 } catch {
   // Fail open on non-JSON output (runtime / install issues).
-  console.error(
-    "fallow-gate: fallow audit did not return JSON; allowing command.",
-  );
+  console.error("fallow-gate: fallow audit did not return JSON; allowing command.");
   allow();
 }
 
@@ -80,9 +74,7 @@ if (result.error === true) {
 }
 
 if (audit.status !== 0 && audit.status !== 1) {
-  console.error(
-    `fallow-gate: fallow audit exited ${String(audit.status)}; allowing command.`,
-  );
+  console.error(`fallow-gate: fallow audit exited ${String(audit.status)}; allowing command.`);
   allow();
 }
 

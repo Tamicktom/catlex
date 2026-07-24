@@ -9,24 +9,16 @@ export function createProgram(): Command {
 
   program
     .name("catlex")
-    .description(
-      "CLI to validate next-intl translation JSON files against a base locale",
-    )
-    .version("0.0.1");
+    .description("CLI to validate next-intl translation JSON files against a base locale")
+    .version("0.0.3");
 
   program
     .command("validate")
-    .description(
-      "Validate translation JSON files against the base locale (default: en.json)",
-    )
+    .description("Validate translation JSON files against the base locale (default: en.json)")
     .option("--dir <path>", "Messages directory relative to cwd")
     .option("--base <locale>", "Base locale file stem (e.g. en)")
     .option("--cwd <path>", "Project root directory", process.cwd())
-    .option(
-      "--strict-extra",
-      "Treat keys missing from the base locale as errors",
-      false,
-    )
+    .option("--strict-extra", "Treat keys missing from the base locale as errors", false)
     .option("--json", "Print machine-readable JSON instead of Ink UI", false)
     .action(async (options) => {
       try {
@@ -39,8 +31,7 @@ export function createProgram(): Command {
         });
         process.exitCode = exitCode;
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         console.error(`Error: ${message}`);
         process.exitCode = 1;
       }
