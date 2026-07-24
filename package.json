@@ -16,6 +16,11 @@
     "validate": "bun run src/bin/catlex.ts validate",
     "test": "bun test",
     "build": "bun build ./src/bin/catlex.ts --compile --outfile dist/catlex",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
     "fallow": "bunx --yes fallow@3.9.1",
     "fallow:audit": "bunx --yes fallow@3.9.1 audit --format json --quiet --explain --gate-marker agent"
   },
@@ -26,6 +31,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.5",
     "@types/bun": "latest",
     "@types/react": "^19.2.9",
     "react-devtools-core": "^7.0.1",
