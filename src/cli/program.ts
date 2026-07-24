@@ -10,7 +10,7 @@ export function createProgram(): Command {
   program
     .name("catlex")
     .description("CLI to validate next-intl translation JSON files against a base locale")
-    .version("0.0.1");
+    .version("0.0.2");
 
   program
     .command("validate")
