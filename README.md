@@ -6,7 +6,7 @@ Catch missing keys before they hit production, and optionally fail on keys that 
 
 ## Install
 
-Linux x64:
+### Linux / macOS
 
 ```bash
 curl -fsSL https://github.com/Tamicktom/catlex/releases/latest/download/install.sh | bash
@@ -18,7 +18,21 @@ Pin a version:
 curl -fsSL https://github.com/Tamicktom/catlex/releases/download/v0.0.1/install.sh | CATLEX_VERSION=0.0.1 bash
 ```
 
-The binary is installed to `~/.local/bin/catlex`. Make sure `~/.local/bin` is on your `PATH`.
+The installer detects OS and architecture (`linux`/`darwin`, `x64`/`arm64`) and installs to `~/.local/bin/catlex`. Make sure `~/.local/bin` is on your `PATH`.
+
+### Windows (x64)
+
+```powershell
+irm https://github.com/Tamicktom/catlex/releases/latest/download/install.ps1 | iex
+```
+
+Pin a version:
+
+```powershell
+$env:CATLEX_VERSION='0.0.1'; irm https://github.com/Tamicktom/catlex/releases/download/v0.0.1/install.ps1 | iex
+```
+
+The binary is installed to `%LOCALAPPDATA%\catlex\bin\catlex.exe`.
 
 ## Quick start
 
@@ -117,7 +131,12 @@ Requires [Bun](https://bun.sh/):
 
 ```bash
 bun install
-bun run build   # → dist/catlex
+bun run build            # → dist/catlex (current platform)
+bun run build:all        # → all release targets
+bun run build:linux:x64  # → dist/catlex-linux-x64
+bun run build:mac:arm64  # → dist/catlex-darwin-arm64
 ```
+
+Per-OS scripts: `build:linux:x64`, `build:linux:arm64`, `build:mac:x64`, `build:mac:arm64`, `build:windows:x64`.
 
 Contributor and agent notes: [AGENTS.md](AGENTS.md).

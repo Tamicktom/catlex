@@ -24,7 +24,8 @@ src/
   core/                  # Config, messages, validators, orchestration
 tests/                   # Mirrors src/core areas
   fixtures/              # Sample message JSON
-scripts/install.sh       # Release installer
+scripts/install.sh       # Unix release installer (Linux / macOS)
+scripts/install.ps1      # Windows release installer
 .github/workflows/       # test, build, release, fallow, biome
 ```
 
@@ -36,6 +37,7 @@ Flow: `bin` → `cli` → `core`. Keep business logic in `src/core`; keep CLI/UI
 bun install
 bun test
 bun run build
+bun run build:all
 bun run validate
 bun run dev
 bun run lint
@@ -43,6 +45,8 @@ bun run format
 bun run check
 bun run check:fix
 ```
+
+Per-OS compile scripts: `build:linux:x64`, `build:linux:arm64`, `build:mac:x64`, `build:mac:arm64`, `build:windows:x64`.
 
 After changing tests, run the affected file in isolation and the full suite:
 
@@ -95,11 +99,17 @@ CI runs `fallow audit` with `gate: new-only` via [`.github/workflows/fallow.yml`
 - Invent an npm publish workflow while the package remains `"private": true`.
 - Let the CLI version in `src/cli/program.ts` drift from `package.json` (the release workflow updates both).
 - Add eslint or prettier; use Biome (`biome.json`) for lint and format.
-- Claim multi-OS release binaries; only Linux x64 (`catlex-linux-x64`) is published today.
 
 ## Releases
 
 Releases are created manually with `workflow_dispatch` on `main`. Do not cut a release unless the user asks.
+
+The release workflow cross-compiles and publishes:
+
+- `catlex-linux-x64`, `catlex-linux-arm64`
+- `catlex-darwin-x64`, `catlex-darwin-arm64`
+- `catlex-windows-x64.exe`
+- `install.sh` (Linux / macOS), `install.ps1` (Windows)
 
 ---
 

@@ -57,14 +57,19 @@ jobs:
           "
           sed -i "s/\.version(\"[^\"]*\")/.version(\"${VERSION}\")/" src/cli/program.ts
 
-      - name: Build standalone binary
-        run: bun run build
+      - name: Build standalone binaries
+        run: bun run build:all
 
       - name: Prepare release assets
         run: |
-          cp dist/catlex catlex-linux-x64
-          chmod +x catlex-linux-x64
+          cp dist/catlex-linux-x64 catlex-linux-x64
+          cp dist/catlex-linux-arm64 catlex-linux-arm64
+          cp dist/catlex-darwin-x64 catlex-darwin-x64
+          cp dist/catlex-darwin-arm64 catlex-darwin-arm64
+          cp dist/catlex-windows-x64.exe catlex-windows-x64.exe
+          chmod +x catlex-linux-x64 catlex-linux-arm64 catlex-darwin-x64 catlex-darwin-arm64
           cp scripts/install.sh install.sh
+          cp scripts/install.ps1 install.ps1
           chmod +x install.sh
 
       - name: Configure git
@@ -89,10 +94,17 @@ jobs:
           TAG="${{ steps.version.outputs.tag }}"
           gh release create "${TAG}" \
             catlex-linux-x64 \
+            catlex-linux-arm64 \
+            catlex-darwin-x64 \
+            catlex-darwin-arm64 \
+            catlex-windows-x64.exe \
             install.sh \
+            install.ps1 \
             --title "${TAG}" \
             --notes "$(cat <<EOF
-          ## Install (Linux)
+          ## Install
+
+          ### Linux / macOS
 
           \`\`\`bash
           curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash
@@ -104,6 +116,20 @@ jobs:
 
           \`\`\`bash
           curl -fsSL https://github.com/${{ github.repository }}/releases/download/${TAG}/install.sh | CATLEX_VERSION=${{ steps.version.outputs.version }} bash
+          \`\`\`
+
+          ### Windows (x64)
+
+          \`\`\`powershell
+          irm https://github.com/${{ github.repository }}/releases/latest/download/install.ps1 | iex
+          \`\`\`
+
+          Installs the binary to \`%LOCALAPPDATA%\\catlex\\bin\\catlex.exe\`.
+
+          To install a specific version:
+
+          \`\`\`powershell
+          \$env:CATLEX_VERSION='${{ steps.version.outputs.version }}'; irm https://github.com/${{ github.repository }}/releases/download/${TAG}/install.ps1 | iex
           \`\`\`
           EOF
           )"
