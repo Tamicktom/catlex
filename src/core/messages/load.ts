@@ -20,7 +20,14 @@ function localeFromFileName(fileName: string): string {
 }
 
 async function loadLocaleFile(filePath: string): Promise<LocaleMessages> {
-  const raw = await readFile(filePath, "utf8");
+  let raw: string;
+
+  try {
+    raw = await readFile(filePath, "utf8");
+  } catch {
+    throw new MessagesLoadError(`Cannot read translation file: ${filePath}`);
+  }
+
   let parsed: unknown;
 
   try {
