@@ -25,7 +25,7 @@ src/
 tests/                   # Mirrors src/core areas
   fixtures/              # Sample message JSON
 scripts/install.sh       # Release installer
-.github/workflows/       # test, build, release
+.github/workflows/       # test, build, release, fallow
 ```
 
 Flow: `bin` → `cli` → `core`. Keep business logic in `src/core`; keep CLI/UI in `src/cli`.
@@ -47,12 +47,25 @@ bun test tests/path/to/file.test.ts
 bun test
 ```
 
+## Fallow
+
+Codebase intelligence config lives in [`.fallowrc.jsonc`](.fallowrc.jsonc). Boundaries enforce `bin` → `cli` → `core`.
+
+```bash
+bun run fallow -- dead-code
+bun run fallow:audit
+bun run fallow -- audit --base main
+```
+
+CI runs `fallow audit` with `gate: new-only` via [`.github/workflows/fallow.yml`](.github/workflows/fallow.yml). A Cursor `beforeShellExecution` hook in [`.cursor/hooks.json`](.cursor/hooks.json) blocks `git commit` / `git push` when `fallow:audit` returns verdict `fail`. Do not enable fallow telemetry on the user's behalf.
+
 ## Architecture rules
 
 - Put validation and I/O logic under `src/core`, not in React/Ink components.
 - To add a validator: implement `Validator` in `src/core/validators/`, register it in `src/core/validators/registry.ts`, and add tests under `tests/`.
 - Public API changes must update `src/index.ts` exports.
 - Config merge order: defaults < config file < CLI flags (`src/core/config/load.ts`).
+- Respect Fallow zones: `bin` may import `cli`/`core`, `cli` may import `core`, `core` must not import `cli` or `bin`.
 
 ## Coding conventions
 
@@ -83,3 +96,32 @@ bun test
 ## Releases
 
 Releases are created manually with `workflow_dispatch` on `main`. Do not cut a release unless the user asks.
+
+---
+
+<!-- fallow:setup-hooks:start -->
+## Fallow local gate
+
+Before any `git commit` or `git push`, run `fallow audit --format json --quiet --explain --gate-marker agent`. If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking.
+
+Audit defaults to `gate=new-only`: only findings introduced by the current changeset affect the verdict. Inherited findings on touched files are reported under `attribution` and annotated with `introduced: false`, but do not block the commit. Set `[audit] gate = "all"` in `fallow.toml` to gate every finding in changed files.
+
+For non-skill agents, treat the task map below as the local onboarding source: run the listed fallow command before destructive edits, before commits, and before pull request handoff.
+
+## Fallow task map
+
+| When the agent is about to... | Run |
+|---|---|
+| delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
+| delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
+| commit or open a PR | `fallow audit --base <ref>` |
+| prioritize refactoring | `fallow health --hotspots --targets` |
+| ask who owns code | `fallow health --ownership` |
+| check untested-but-reachable code | `fallow health --coverage-gaps` |
+| consolidate duplication | `fallow dupes --trace dup:<fingerprint>` |
+| find feature flags | `fallow flags` |
+| check which architecture rules apply to a file before changing it | `fallow guard <files>` |
+| surface security candidates | `fallow security` |
+| understand a finding | `fallow explain <issue-type>` |
+| scope a monorepo | `--workspace <glob> / --changed-workspaces <ref>` (global flags, prefix any command) |
+<!-- fallow:setup-hooks:end -->

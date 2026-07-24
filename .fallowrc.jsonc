@@ -1,0 +1,27 @@
+{
+  // This file is JSONC: fallow reads these comments; generic JSON tools may not.
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "duplicates": {
+    // Hide pair-only clones; focus on widespread copy-paste worth refactoring.
+    "minOccurrences": 3
+  },
+  // Optional Ink peer used only when React DevTools are attached.
+  "ignoreDependencies": ["react-devtools-core"],
+  "boundaries": {
+    "zones": [
+      { "name": "bin", "patterns": ["src/bin/**"] },
+      { "name": "cli", "patterns": ["src/cli/**"] },
+      { "name": "core", "patterns": ["src/core/**"] }
+    ],
+    "rules": [
+      { "from": "bin", "allow": ["cli", "core"] },
+      { "from": "cli", "allow": ["core"] },
+      { "from": "core", "allow": ["core"] }
+    ],
+    "coverage": {
+      "requireAllFiles": true,
+      "allowUnmatched": ["src/index.ts", "tests/**"]
+    }
+  },
+  "rules": {}
+}
