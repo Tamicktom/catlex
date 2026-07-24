@@ -1,5 +1,5 @@
 //* Local imports
-export { loadConfig } from "./core/config/load.ts";
+export { loadConfig, ConfigLoadError } from "./core/config/load.ts";
 export { DEFAULT_CONFIG } from "./core/config/defaults.ts";
 export { catlexConfigSchema } from "./core/config/schema.ts";
 export { flattenMessages } from "./core/messages/flatten.ts";
