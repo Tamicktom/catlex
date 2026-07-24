@@ -1,8 +1,5 @@
 //* Local imports
-import {
-  compareFlatMessages,
-  compareResultToIssues,
-} from "../messages/compare.ts";
+import { compareFlatMessages, compareResultToIssues } from "../messages/compare.ts";
 
 //* Types imports
 import type { ValidationIssue } from "../types.ts";

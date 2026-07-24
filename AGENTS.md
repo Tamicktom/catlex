@@ -25,7 +25,7 @@ src/
 tests/                   # Mirrors src/core areas
   fixtures/              # Sample message JSON
 scripts/install.sh       # Release installer
-.github/workflows/       # test, build, release, fallow
+.github/workflows/       # test, build, release, fallow, biome
 ```
 
 Flow: `bin` → `cli` → `core`. Keep business logic in `src/core`; keep CLI/UI in `src/cli`.
@@ -38,6 +38,10 @@ bun test
 bun run build
 bun run validate
 bun run dev
+bun run lint
+bun run format
+bun run check
+bun run check:fix
 ```
 
 After changing tests, run the affected file in isolation and the full suite:
@@ -90,7 +94,7 @@ CI runs `fallow audit` with `gate: new-only` via [`.github/workflows/fallow.yml`
 
 - Invent an npm publish workflow while the package remains `"private": true`.
 - Let the CLI version in `src/cli/program.ts` drift from `package.json` (the release workflow updates both).
-- Add eslint, prettier, or biome unless explicitly asked.
+- Add eslint or prettier; use Biome (`biome.json`) for lint and format.
 - Claim multi-OS release binaries; only Linux x64 (`catlex-linux-x64`) is published today.
 
 ## Releases

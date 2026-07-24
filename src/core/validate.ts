@@ -8,11 +8,7 @@ import { runValidators } from "./validators/registry.ts";
 
 //* Types imports
 import type { ConfigFlags } from "./config/schema.ts";
-import type {
-  LocaleReport,
-  ValidationIssue,
-  ValidationResult,
-} from "./types.ts";
+import type { LocaleReport, ValidationIssue, ValidationResult } from "./types.ts";
 
 export type ValidateOptions = ConfigFlags & {
   cwd?: string;
@@ -61,10 +57,7 @@ export async function validateTranslations(
   };
 }
 
-export function hasFailingIssues(
-  issues: ValidationIssue[],
-  strictExtra: boolean,
-): boolean {
+export function hasFailingIssues(issues: ValidationIssue[], strictExtra: boolean): boolean {
   return issues.some((issue) => {
     if (issue.kind === "missing") {
       return true;
