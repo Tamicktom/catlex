@@ -1,13 +1,9 @@
 //* Libraries imports
-import React from "react";
 import { render } from "ink";
 
 //* Local imports
 import { Report } from "../ui/Report.tsx";
-import {
-  hasFailingIssues,
-  validateTranslations,
-} from "../../core/validate.ts";
+import { hasFailingIssues, validateTranslations } from "../../core/validate.ts";
 import { loadConfig } from "../../core/config/load.ts";
 
 //* Types imports
@@ -21,11 +17,7 @@ export type ValidateCommandOptions = {
   json?: boolean;
 };
 
-function printJson(
-  result: ValidationResult,
-  strictExtra: boolean,
-  failed: boolean,
-): void {
+function printJson(result: ValidationResult, strictExtra: boolean, failed: boolean): void {
   const payload = {
     ok: !failed,
     baseLocale: result.baseLocale,
@@ -38,9 +30,7 @@ function printJson(
   console.log(JSON.stringify(payload, null, 2));
 }
 
-export async function runValidateCommand(
-  options: ValidateCommandOptions,
-): Promise<number> {
+export async function runValidateCommand(options: ValidateCommandOptions): Promise<number> {
   const cwd = options.cwd ?? process.cwd();
 
   const config = await loadConfig(cwd, {
@@ -61,9 +51,7 @@ export async function runValidateCommand(
   if (options.json) {
     printJson(result, config.strictExtra, failed);
   } else {
-    const instance = render(
-      <Report result={result} strictExtra={config.strictExtra} />,
-    );
+    const instance = render(<Report result={result} strictExtra={config.strictExtra} />);
     instance.unmount();
   }
 

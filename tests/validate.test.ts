@@ -3,10 +3,7 @@ import { describe, expect, it } from "bun:test";
 import path from "node:path";
 
 //* Local imports
-import {
-  hasFailingIssues,
-  validateTranslations,
-} from "../src/core/validate.ts";
+import { hasFailingIssues, validateTranslations } from "../src/core/validate.ts";
 
 const fixturesRoot = path.join(import.meta.dir, "fixtures");
 
@@ -35,12 +32,9 @@ describe("validateTranslations", () => {
   });
 
   it("fails when missing keys exist", () => {
-    expect(
-      hasFailingIssues(
-        [{ locale: "pt", path: "nav.about", kind: "missing" }],
-        false,
-      ),
-    ).toBe(true);
+    expect(hasFailingIssues([{ locale: "pt", path: "nav.about", kind: "missing" }], false)).toBe(
+      true,
+    );
   });
 
   it("treats extra keys as warnings unless strictExtra is enabled", () => {

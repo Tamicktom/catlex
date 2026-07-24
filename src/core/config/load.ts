@@ -68,16 +68,12 @@ async function loadConfigFile(cwd: string): Promise<Partial<CatlexConfig>> {
   }
 
   const isJson = configPath.endsWith(".json");
-  const raw = isJson
-    ? await loadJsonConfig(configPath)
-    : await loadModuleConfig(configPath);
+  const raw = isJson ? await loadJsonConfig(configPath) : await loadModuleConfig(configPath);
 
   const parsed = catlexConfigSchema.partial().safeParse(raw);
 
   if (!parsed.success) {
-    throw new ConfigLoadError(
-      `Invalid config in ${configPath}: ${parsed.error.message}`,
-    );
+    throw new ConfigLoadError(`Invalid config in ${configPath}: ${parsed.error.message}`);
   }
 
   return parsed.data;
@@ -86,18 +82,13 @@ async function loadConfigFile(cwd: string): Promise<Partial<CatlexConfig>> {
 /**
  * Merges config in order: defaults < config file < CLI flags.
  */
-export async function loadConfig(
-  cwd: string,
-  flags: ConfigFlags = {},
-): Promise<CatlexConfig> {
+export async function loadConfig(cwd: string, flags: ConfigFlags = {}): Promise<CatlexConfig> {
   const fileConfig = await loadConfigFile(cwd);
 
   const merged = {
     ...DEFAULT_CONFIG,
     ...fileConfig,
-    ...Object.fromEntries(
-      Object.entries(flags).filter(([, value]) => value !== undefined),
-    ),
+    ...Object.fromEntries(Object.entries(flags).filter(([, value]) => value !== undefined)),
   };
 
   const parsed = catlexConfigSchema.safeParse(merged);

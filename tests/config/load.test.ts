@@ -12,9 +12,7 @@ describe("loadConfig", () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
-    await Promise.all(
-      tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
-    );
+    await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
   });
 
   async function createTempDir(): Promise<string> {
@@ -75,10 +73,7 @@ describe("loadConfig", () => {
   it("ignores undefined flags when merging", async () => {
     const cwd = await createTempDir();
     await mkdir(path.join(cwd, "messages"), { recursive: true });
-    await writeFile(
-      path.join(cwd, "catlex.config.json"),
-      JSON.stringify({ baseLocale: "es" }),
-    );
+    await writeFile(path.join(cwd, "catlex.config.json"), JSON.stringify({ baseLocale: "es" }));
 
     const config = await loadConfig(cwd, {
       messagesDir: undefined,
