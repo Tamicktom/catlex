@@ -16,6 +16,8 @@ export {
   validateTranslations,
   hasFailingIssues,
 } from "./core/validate.ts";
+export { scanHardcoded } from "./core/scan/scan.ts";
+export { isLikelyUserVisible, USER_FACING_ATTRS } from "./core/scan/filters.ts";
 
 export type {
   CatlexConfig,
@@ -31,3 +33,8 @@ export type {
 export type { ConfigFlags, CatlexConfigInput } from "./core/config/schema.ts";
 export type { Validator } from "./core/validators/types.ts";
 export type { ValidateOptions } from "./core/validate.ts";
+export type {
+  HardcodedIssue,
+  HardcodedIssueKind,
+  ScanResult,
+} from "./core/scan/types.ts";
