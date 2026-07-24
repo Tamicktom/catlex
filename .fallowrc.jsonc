@@ -7,6 +7,8 @@
   },
   // Optional Ink peer used only when React DevTools are attached.
   "ignoreDependencies": ["react-devtools-core"],
+  // Scanned by path in tests; not imported as modules.
+  "ignorePatterns": ["tests/fixtures/source/hardcoded/**"],
   "boundaries": {
     "zones": [
       { "name": "bin", "patterns": ["src/bin/**"] },
