@@ -26,13 +26,15 @@ src/core/scan/
   walk.ts       # TypeScript AST walk → issues
   scan.ts       # discover *.jsx / *.tsx, parse, walk
 
-tests/fixtures/source/hardcoded/   # flag / no-flag examples
-tests/scan/hardcoded.test.ts       # BDD coverage
+tests/fixtures/source/hardcoded/          # valid flag / no-flag examples
+tests/fixtures/source/hardcoded/discovery/ # nested dirs for ignore rules
+tests/fixtures/source/hardcoded-broken/   # invalid JSX (resilience)
+tests/scan/hardcoded.test.ts              # BDD coverage
 ```
 
 Public exports live in [`src/index.ts`](../src/index.ts): `scanHardcoded`, `isLikelyUserVisible`, `USER_FACING_ATTRS`, and the scan types.
 
-Fixture files under `tests/fixtures/source/hardcoded/` are excluded from fallow dead-code analysis via `ignorePatterns` in [`.fallowrc.jsonc`](../.fallowrc.jsonc) (they are loaded by path, not imported as modules).
+Fixture files under `tests/fixtures/source/hardcoded/` and `hardcoded-broken/` are excluded from fallow dead-code analysis via `ignorePatterns` in [`.fallowrc.jsonc`](../.fallowrc.jsonc) (they are loaded by path, not imported as modules).
 
 ### Algorithm (v1)
 
@@ -98,7 +100,15 @@ bun test tests/scan/hardcoded.test.ts
 bun test
 ```
 
-Fixtures cover the happy path, `t()`, `className`, expression strings, noise filters, `<Trans>`, mixed files, and both `.tsx` and `.jsx`.
+Fixtures cover:
+
+- Happy path text / attributes (`.tsx` and `.jsx`)
+- `t()`, `t.rich`, `t.markup`, `className`, expression strings, template literals
+- Remaining `USER_FACING_ATTRS` (`title`, aria-*), attribute expression form
+- Noise filters, `<Trans>` (children skipped; attrs still scanned)
+- Complex / messy real-world copy, nested and namespaced components
+- Intentional v1 negatives (bindings, ternaries, `children` prop)
+- Discovery ignore rules (`node_modules`, dot-dirs) and broken-JSX resilience
 
 ## Out of scope (by design for this prototype)
 
