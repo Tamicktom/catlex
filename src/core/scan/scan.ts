@@ -9,12 +9,7 @@ import { walkSourceFile } from "./walk.ts";
 //* Types imports
 import type { HardcodedIssue, ScanResult } from "./types.ts";
 
-const IGNORE_DIR_NAMES = new Set([
-  "node_modules",
-  "dist",
-  ".next",
-  ".git",
-]);
+const IGNORE_DIR_NAMES = new Set(["node_modules", "dist", ".next", ".git"]);
 
 const SOURCE_EXTENSIONS = new Set([".jsx", ".tsx"]);
 
@@ -28,10 +23,7 @@ async function collectSourceFiles(rootDir: string): Promise<string[]> {
       const fullPath = path.join(dir, entry.name);
 
       if (entry.isDirectory()) {
-        if (
-          IGNORE_DIR_NAMES.has(entry.name) ||
-          entry.name.startsWith(".")
-        ) {
+        if (IGNORE_DIR_NAMES.has(entry.name) || entry.name.startsWith(".")) {
           continue;
         }
         await walkDir(fullPath);
@@ -49,8 +41,7 @@ async function collectSourceFiles(rootDir: string): Promise<string[]> {
 }
 
 function parseSourceFile(filePath: string, content: string): ts.SourceFile {
-  const scriptKind =
-    path.extname(filePath) === ".jsx" ? ts.ScriptKind.JSX : ts.ScriptKind.TSX;
+  const scriptKind = path.extname(filePath) === ".jsx" ? ts.ScriptKind.JSX : ts.ScriptKind.TSX;
 
   return ts.createSourceFile(
     filePath,

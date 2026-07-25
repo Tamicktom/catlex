@@ -11,24 +11,14 @@ describe("scanHardcoded complex fixtures", () => {
     const issues = issuesForFile(result.issues, "text-complex.tsx");
 
     expect(issues).toHaveLength(6);
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Save changes…" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Don’t delete this account" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Hello 👋 world" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Configurações gerais" }),
-    );
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Save changes…" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Don’t delete this account" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Hello 👋 world" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Configurações gerais" }));
     expect(issues).toContainEqual(
       expect.objectContaining({ text: "Use “smart quotes” carefully" }),
     );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Price:\u00A0R$ 10,00" }),
-    );
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Price:\u00A0R$ 10,00" }));
   });
 
   it("trims multiline JSX text while preserving internal newlines", async () => {
@@ -85,27 +75,13 @@ describe("scanHardcoded complex fixtures", () => {
     const issues = issuesForFile(result.issues, "nested-components.tsx");
 
     expect(issues).toHaveLength(7);
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Full name" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Team plan" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "seats remaining" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Starter plan" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "Includes" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "basic" }),
-    );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ text: "support" }),
-    );
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Full name" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Team plan" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "seats remaining" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Starter plan" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "Includes" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "basic" }));
+    expect(issues).toContainEqual(expect.objectContaining({ text: "support" }));
   });
 
   it("flags hardcoded strings in densely formatted messy components", async () => {
@@ -120,9 +96,7 @@ describe("scanHardcoded complex fixtures", () => {
         text: "Submit form",
       }),
     );
-    expect(issues).toContainEqual(
-      expect.objectContaining({ kind: "jsx-text", text: "Submit" }),
-    );
+    expect(issues).toContainEqual(expect.objectContaining({ kind: "jsx-text", text: "Submit" }));
     expect(issues).toContainEqual(
       expect.objectContaining({
         kind: "jsx-attribute",

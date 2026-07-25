@@ -13,12 +13,8 @@ type IssueCollector = {
   issues: HardcodedIssue[];
 };
 
-function getJsxTagName(
-  node: ts.JsxElement | ts.JsxSelfClosingElement,
-): string {
-  const tagName = ts.isJsxElement(node)
-    ? node.openingElement.tagName
-    : node.tagName;
+function getJsxTagName(node: ts.JsxElement | ts.JsxSelfClosingElement): string {
+  const tagName = ts.isJsxElement(node) ? node.openingElement.tagName : node.tagName;
 
   if (ts.isIdentifier(tagName)) {
     return tagName.text;
@@ -27,10 +23,7 @@ function getJsxTagName(
   return tagName.getText();
 }
 
-function readAttributeName(
-  attr: ts.JsxAttribute,
-  sourceFile: ts.SourceFile,
-): string {
+function readAttributeName(attr: ts.JsxAttribute, sourceFile: ts.SourceFile): string {
   if (ts.isIdentifier(attr.name)) {
     return attr.name.text;
   }
@@ -38,22 +31,14 @@ function readAttributeName(
   return attr.name.getText(sourceFile);
 }
 
-function positionOf(
-  node: ts.Node,
-  sourceFile: ts.SourceFile,
-): { line: number; column: number } {
-  const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-    node.getStart(sourceFile),
-  );
+function positionOf(node: ts.Node, sourceFile: ts.SourceFile): { line: number; column: number } {
+  const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
 
   return { line: line + 1, column: character + 1 };
 }
 
 function tryStringLiteralText(expression: ts.Expression): string | undefined {
-  if (
-    ts.isStringLiteral(expression) ||
-    ts.isNoSubstitutionTemplateLiteral(expression)
-  ) {
+  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
     return expression.text;
   }
 
@@ -107,10 +92,7 @@ function collectAttributeInitializer(
   pushIssue(collector, initializer.expression, text, "jsx-attribute", name);
 }
 
-function visitAttributes(
-  collector: IssueCollector,
-  attributes: ts.JsxAttributes,
-): void {
+function visitAttributes(collector: IssueCollector, attributes: ts.JsxAttributes): void {
   for (const property of attributes.properties) {
     if (!ts.isJsxAttribute(property)) {
       continue;
@@ -150,10 +132,7 @@ function visitJsxText(collector: IssueCollector, node: ts.JsxText): void {
   pushIssue(collector, node, node.text, "jsx-text");
 }
 
-function visitJsxExpression(
-  collector: IssueCollector,
-  node: ts.JsxExpression,
-): void {
+function visitJsxExpression(collector: IssueCollector, node: ts.JsxExpression): void {
   if (!node.expression) {
     return;
   }
@@ -200,10 +179,7 @@ function visitNode(collector: IssueCollector, node: ts.Node): void {
 /**
  * Walk a parsed TSX/JSX source file and collect obvious hardcoded UI strings.
  */
-export function walkSourceFile(
-  sourceFile: ts.SourceFile,
-  filePath: string,
-): HardcodedIssue[] {
+export function walkSourceFile(sourceFile: ts.SourceFile, filePath: string): HardcodedIssue[] {
   const collector: IssueCollector = {
     sourceFile,
     filePath,

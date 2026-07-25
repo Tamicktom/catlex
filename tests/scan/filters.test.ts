@@ -2,11 +2,7 @@
 import { describe, expect, it } from "bun:test";
 
 //* Local imports
-import {
-  isLikelyUserVisible,
-  isUserFacingAttribute,
-  USER_FACING_ATTRS,
-} from "../../src/index.ts";
+import { isLikelyUserVisible, isUserFacingAttribute, USER_FACING_ATTRS } from "../../src/index.ts";
 
 describe("isLikelyUserVisible", () => {
   describe("user-facing copy", () => {

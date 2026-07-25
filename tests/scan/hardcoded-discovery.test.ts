@@ -18,13 +18,9 @@ describe("scanHardcoded discovery", () => {
       }),
     );
     expect(path.basename(result.issues[0]!.filePath)).toBe("ok.tsx");
+    expect(result.issues.some((issue) => issue.filePath.includes("node_modules"))).toBe(false);
     expect(
-      result.issues.some((issue) => issue.filePath.includes("node_modules")),
-    ).toBe(false);
-    expect(
-      result.issues.some((issue) =>
-        issue.filePath.includes(`${path.sep}.hidden${path.sep}`),
-      ),
+      result.issues.some((issue) => issue.filePath.includes(`${path.sep}.hidden${path.sep}`)),
     ).toBe(false);
   });
 });
