@@ -22,6 +22,12 @@ export {
   isUserFacingAttribute,
   USER_FACING_ATTRS,
 } from "./core/scan/filters.ts";
+export {
+  WORKFLOW_RELATIVE_PATH,
+  resolveWorkflowPath,
+} from "./core/init-ci/paths.ts";
+export { generateValidateMessagesWorkflow } from "./core/init-ci/workflow.ts";
+export { writeGithubWorkflow } from "./core/init-ci/write.ts";
 
 export type {
   CatlexConfig,
@@ -42,3 +48,7 @@ export type {
   HardcodedIssueKind,
   ScanResult,
 } from "./core/scan/types.ts";
+export type {
+  WriteGithubWorkflowOptions,
+  WriteGithubWorkflowResult,
+} from "./core/init-ci/write.ts";
