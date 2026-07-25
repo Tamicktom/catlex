@@ -17,8 +17,7 @@ export const USER_FACING_ATTRS = new Set([
 const PUNCTUATION_ONLY = /^[\p{P}\p{S}\s]+$/u;
 const DIGITS_ONLY = /^[\d\s]+$/u;
 /** Emoji / pictographs / variation selectors / ZWJ sequences, optional whitespace */
-const EMOJI_ONLY =
-  /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s])+$/u;
+const EMOJI_ONLY = /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\s]|\uFE0F|\u200D)+$/u;
 
 /**
  * Returns true when `text` looks like user-visible copy that should be translated.
