@@ -9,7 +9,10 @@
   // direct import). react-devtools-core is optional and only used when DevTools attach.
   "ignoreDependencies": ["react", "react-devtools-core"],
   // Scanned by path in tests; not imported as modules.
-  "ignorePatterns": ["tests/fixtures/source/hardcoded/**"],
+  "ignorePatterns": [
+    "tests/fixtures/source/hardcoded/**",
+    "tests/fixtures/source/hardcoded-broken/**"
+  ],
   "boundaries": {
     "zones": [
       { "name": "bin", "patterns": ["src/bin/**"] },
