@@ -188,7 +188,10 @@ function visitNode(collector: IssueCollector, node: ts.Node): void {
   }
 
   if (ts.isJsxExpression(node)) {
+    // Direct string literals, then nested JSX inside the expression (e.g. `{<span>Hi</span>}`).
     visitJsxExpression(collector, node);
+    ts.forEachChild(node, (child) => visitNode(collector, child));
+    return;
   }
 
   ts.forEachChild(node, (child) => visitNode(collector, child));

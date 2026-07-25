@@ -48,6 +48,19 @@ async function collectSourceFiles(rootDir: string): Promise<string[]> {
   return files;
 }
 
+function parseSourceFile(filePath: string, content: string): ts.SourceFile {
+  const scriptKind =
+    path.extname(filePath) === ".jsx" ? ts.ScriptKind.JSX : ts.ScriptKind.TSX;
+
+  return ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    scriptKind,
+  );
+}
+
 /**
  * Scan a directory tree for obvious hardcoded user-visible strings in JSX/TSX.
  */
@@ -58,16 +71,7 @@ export async function scanHardcoded(rootDir: string): Promise<ScanResult> {
 
   for (const filePath of sourceFiles) {
     const content = await Bun.file(filePath).text();
-    const scriptKind =
-      path.extname(filePath) === ".jsx" ? ts.ScriptKind.JSX : ts.ScriptKind.TSX;
-    const sourceFile = ts.createSourceFile(
-      filePath,
-      content,
-      ts.ScriptTarget.Latest,
-      /* setParentNodes */ true,
-      scriptKind,
-    );
-
+    const sourceFile = parseSourceFile(filePath, content);
     issues.push(...walkSourceFile(sourceFile, filePath));
   }
 

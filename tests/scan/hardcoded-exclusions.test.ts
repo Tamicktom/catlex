@@ -2,7 +2,7 @@
 import { describe, expect, it } from "bun:test";
 
 //* Local imports
-import { scanHardcoded } from "../../src/core/scan/scan.ts";
+import { scanHardcoded } from "../../src/index.ts";
 import { fixturesRoot, issuesForFile } from "./helpers.ts";
 
 describe("scanHardcoded exclusions", () => {

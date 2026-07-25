@@ -6,7 +6,7 @@ import {
   isLikelyUserVisible,
   isUserFacingAttribute,
   USER_FACING_ATTRS,
-} from "../../src/core/scan/filters.ts";
+} from "../../src/index.ts";
 
 describe("isLikelyUserVisible", () => {
   describe("user-facing copy", () => {

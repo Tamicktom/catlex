@@ -3,7 +3,7 @@ import { describe, expect, it } from "bun:test";
 import path from "node:path";
 
 //* Local imports
-import { scanHardcoded } from "../../src/core/scan/scan.ts";
+import { scanHardcoded } from "../../src/index.ts";
 import { brokenRoot } from "./helpers.ts";
 
 describe("scanHardcoded resilience", () => {

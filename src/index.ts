@@ -17,7 +17,11 @@ export {
   hasFailingIssues,
 } from "./core/validate.ts";
 export { scanHardcoded } from "./core/scan/scan.ts";
-export { isLikelyUserVisible, USER_FACING_ATTRS } from "./core/scan/filters.ts";
+export {
+  isLikelyUserVisible,
+  isUserFacingAttribute,
+  USER_FACING_ATTRS,
+} from "./core/scan/filters.ts";
 
 export type {
   CatlexConfig,

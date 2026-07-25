@@ -5,6 +5,16 @@ import { Command } from "commander";
 import { runScanCommand } from "./commands/scan.tsx";
 import { runValidateCommand } from "./commands/validate.tsx";
 
+async function setExitCodeFrom(run: () => Promise<number>): Promise<void> {
+  try {
+    process.exitCode = await run();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Error: ${message}`);
+    process.exitCode = 1;
+  }
+}
+
 export function createProgram(): Command {
   const program = new Command();
 
@@ -24,20 +34,15 @@ export function createProgram(): Command {
     .option("--strict-extra", "Treat keys missing from the base locale as errors", false)
     .option("--json", "Print machine-readable JSON instead of Ink UI", false)
     .action(async (options) => {
-      try {
-        const exitCode = await runValidateCommand({
+      await setExitCodeFrom(() =>
+        runValidateCommand({
           dir: options.dir,
           base: options.base,
           cwd: options.cwd,
           strictExtra: options.strictExtra === true,
           json: options.json === true,
-        });
-        process.exitCode = exitCode;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error(`Error: ${message}`);
-        process.exitCode = 1;
-      }
+        }),
+      );
     });
 
   program
@@ -47,18 +52,13 @@ export function createProgram(): Command {
     .option("--cwd <path>", "Project root directory", process.cwd())
     .option("--json", "Print machine-readable JSON instead of Ink UI", false)
     .action(async (options) => {
-      try {
-        const exitCode = await runScanCommand({
+      await setExitCodeFrom(() =>
+        runScanCommand({
           dir: options.dir,
           cwd: options.cwd,
           json: options.json === true,
-        });
-        process.exitCode = exitCode;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error(`Error: ${message}`);
-        process.exitCode = 1;
-      }
+        }),
+      );
     });
 
   return program;
