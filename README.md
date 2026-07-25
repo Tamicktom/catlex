@@ -1,8 +1,8 @@
 # catlex
 
-CLI to validate [next-intl](https://next-intl.dev/)-style translation JSON files against a base locale.
+CLI to validate [next-intl](https://next-intl.dev/)-style translation JSON files against a base locale, and scan JSX/TSX for hardcoded user-visible strings.
 
-Catch missing keys before they hit production, and optionally fail on keys that exist only in a locale file.
+Catch missing keys before they hit production, optionally fail on keys that exist only in a locale file, and (alpha) flag UI copy that never entered the message files.
 
 ## Install
 
@@ -112,17 +112,36 @@ Example `catlex.config.json`:
 }
 ```
 
+## Source scan (alpha)
+
+Scan JSX/TSX for obvious hardcoded user-visible strings that should go through next-intl instead:
+
+```bash
+catlex scan
+catlex scan --dir src
+catlex scan --json
+```
+
+| Option | Description |
+|--------|-------------|
+| `--dir <path>` | Source root relative to the project root (default: `.`) |
+| `--cwd <path>` | Project root (default: current directory) |
+| `--json` | Print JSON instead of the interactive terminal UI |
+
+This command is **alpha**: false positives and missed issues may occur. Detection covers JSX text and common user-facing attributes (`placeholder`, `alt`, `title`, aria-*); translation calls like `t("…")` and `<Trans>` children are not flagged.
+
 ## Exit codes and CI
 
 | Code | Meaning |
 |------|---------|
-| `0` | Validation passed |
-| `1` | Validation failed or an error occurred |
+| `0` | Validation or scan passed |
+| `1` | Validation/scan failed or an error occurred |
 
 For pipelines, prefer `--json`:
 
 ```bash
 catlex validate --json
+catlex scan --json
 ```
 
 ## Building from source

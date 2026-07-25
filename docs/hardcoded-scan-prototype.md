@@ -2,7 +2,7 @@
 
 Status notes for the experimental source scanner that finds obvious user-visible strings which should go through [next-intl](https://next-intl.dev/) instead of being hardcoded in JSX/TSX.
 
-This is a **library prototype**. It is not wired into the `catlex validate` CLI yet.
+The scanner ships as **`catlex scan` (alpha)** with Ink UI and `--json`. False positives and missed issues may still occur. Config options (`sourceDir`, ignore globs, `ignoreStrings`) are not wired yet.
 
 ## Motivation
 
@@ -13,7 +13,7 @@ This is a **library prototype**. It is not wired into the `catlex validate` CLI 
 <input placeholder="Email" />
 ```
 
-The scan prototype targets those cases so we can later add a `catlex scan` (or similar) command.
+The scan targets those cases via `catlex scan`.
 
 ## What was built
 
@@ -86,6 +86,16 @@ type HardcodedIssue = {
 
 ### How to try it
 
+CLI (alpha):
+
+```bash
+catlex scan
+catlex scan --dir app
+catlex scan --json
+```
+
+Library:
+
 ```ts
 import { scanHardcoded } from "./src/index.ts";
 
@@ -112,27 +122,26 @@ Fixtures cover:
 
 ## Out of scope (by design for this prototype)
 
-- CLI command / Ink UI
 - Merging into `ValidationIssue` / the `missing-keys` validator registry
 - Unused keys or “key used in source but missing from JSON”
 - Auto-fix / suggested message keys
 - Variable and prop tracking
+- Config fields for scan roots / ignore globs / string allowlists
 
 ## Next steps
 
-Rough priority order after the prototype proves useful on real apps:
+Rough priority order after the alpha CLI proves useful on real apps:
 
-1. **CLI surface** — add something like `catlex scan` with Ink + `--json`, config options (`sourceDir`, ignore globs, `ignoreStrings`), and clear exit codes.
-2. **Config** — extend `catlex.config.*` so scan roots and allowlists live next to message-dir settings.
-3. **Issue model** — either keep scan reports separate from locale parity, or unify kinds (`missing` / `extra` / `hardcoded`) under one reporting pipeline.
-4. **Key extraction** — collect `t("...")` / `useTranslations` namespaces from source and compare against the base locale JSON (missing-in-JSON / unused-in-source).
-5. **Richer detection (phase B)** — track simple local bindings that end up in JSX; optionally templates and ternaries with static arms.
-6. **Adoption helpers** — baselines / suppressions for large existing codebases (similar to “disable next line” patterns in other i18n CLIs).
-7. **Docs** — document the command in [`README.md`](../README.md) once it ships; keep this file as design history or fold a short “Source scan” section into the README.
+1. **Config** — extend `catlex.config.*` so scan roots and allowlists live next to message-dir settings (`sourceDir`, ignore globs, `ignoreStrings`).
+2. **Issue model** — either keep scan reports separate from locale parity, or unify kinds (`missing` / `extra` / `hardcoded`) under one reporting pipeline.
+3. **Key extraction** — collect `t("...")` / `useTranslations` namespaces from source and compare against the base locale JSON (missing-in-JSON / unused-in-source).
+4. **Richer detection (phase B)** — track simple local bindings that end up in JSX; optionally templates and ternaries with static arms.
+5. **Adoption helpers** — baselines / suppressions for large existing codebases (similar to “disable next line” patterns in other i18n CLIs).
+6. **Docs** — keep this file as design history; fold deeper “Source scan” detail into the README as the feature matures.
 
 ## Related product surface today
 
 | Command / API | Responsibility |
 |---------------|----------------|
 | `catlex validate` / `validateTranslations` | Locale JSON key parity |
-| `scanHardcoded` (prototype) | Hardcoded UI strings in JSX/TSX |
+| `catlex scan` / `scanHardcoded` (alpha) | Hardcoded UI strings in JSX/TSX |
