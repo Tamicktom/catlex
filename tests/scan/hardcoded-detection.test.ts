@@ -1,54 +1,11 @@
 //* Libraries imports
 import { describe, expect, it } from "bun:test";
-import path from "node:path";
 
 //* Local imports
-import { isLikelyUserVisible } from "../../src/core/scan/filters.ts";
 import { scanHardcoded } from "../../src/core/scan/scan.ts";
-import type { HardcodedIssue } from "../../src/core/scan/types.ts";
+import { fixturesRoot, issuesForFile } from "./helpers.ts";
 
-const fixturesRoot = path.join(
-  import.meta.dir,
-  "..",
-  "fixtures",
-  "source",
-  "hardcoded",
-);
-
-function issuesForFile(
-  issues: HardcodedIssue[],
-  fileName: string,
-): HardcodedIssue[] {
-  return issues.filter((issue) => path.basename(issue.filePath) === fileName);
-}
-
-describe("isLikelyUserVisible", () => {
-  it("returns true for ordinary user-facing copy", () => {
-    expect(isLikelyUserVisible("Save")).toBe(true);
-    expect(isLikelyUserVisible("  Hello world  ")).toBe(true);
-  });
-
-  it("returns false for whitespace-only text", () => {
-    expect(isLikelyUserVisible(" ")).toBe(false);
-    expect(isLikelyUserVisible("\n\t")).toBe(false);
-    expect(isLikelyUserVisible("")).toBe(false);
-  });
-
-  it("returns false for punctuation-only text", () => {
-    expect(isLikelyUserVisible("—")).toBe(false);
-    expect(isLikelyUserVisible("...")).toBe(false);
-  });
-
-  it("returns false for emoji-only text", () => {
-    expect(isLikelyUserVisible("🎉")).toBe(false);
-  });
-
-  it("returns false for numeric-only text", () => {
-    expect(isLikelyUserVisible("42")).toBe(false);
-  });
-});
-
-describe("scanHardcoded", () => {
+describe("scanHardcoded detection", () => {
   it("flags hardcoded JSX text in a button", async () => {
     const result = await scanHardcoded(fixturesRoot);
     const issues = issuesForFile(result.issues, "text-basic.tsx");
@@ -75,13 +32,6 @@ describe("scanHardcoded", () => {
     ]);
   });
 
-  it("does not flag text already passed through t()", async () => {
-    const result = await scanHardcoded(fixturesRoot);
-    const issues = issuesForFile(result.issues, "text-with-t.tsx");
-
-    expect(issues).toEqual([]);
-  });
-
   it("flags user-facing attribute string literals", async () => {
     const result = await scanHardcoded(fixturesRoot);
     const issues = issuesForFile(result.issues, "attr-placeholder.tsx");
@@ -96,13 +46,6 @@ describe("scanHardcoded", () => {
     ]);
   });
 
-  it("does not flag non-user-facing attributes like className", async () => {
-    const result = await scanHardcoded(fixturesRoot);
-    const issues = issuesForFile(result.issues, "attr-classname.tsx");
-
-    expect(issues).toEqual([]);
-  });
-
   it("flags string literals inside JSX expression containers", async () => {
     const result = await scanHardcoded(fixturesRoot);
     const issues = issuesForFile(result.issues, "expression-string.tsx");
@@ -114,20 +57,6 @@ describe("scanHardcoded", () => {
         line: 2,
       }),
     ]);
-  });
-
-  it("does not flag whitespace, punctuation, emoji, or numeric-only text", async () => {
-    const result = await scanHardcoded(fixturesRoot);
-    const issues = issuesForFile(result.issues, "whitespace-only.tsx");
-
-    expect(issues).toEqual([]);
-  });
-
-  it("does not flag text inside a Trans component", async () => {
-    const result = await scanHardcoded(fixturesRoot);
-    const issues = issuesForFile(result.issues, "trans-component.tsx");
-
-    expect(issues).toEqual([]);
   });
 
   it("reports every obvious hardcoded string in a mixed file", async () => {
@@ -162,5 +91,80 @@ describe("scanHardcoded", () => {
         text: "Logo",
       }),
     );
+  });
+
+  it("flags title and remaining aria-* user-facing attributes", async () => {
+    const result = await scanHardcoded(fixturesRoot);
+    const issues = issuesForFile(result.issues, "attr-title-aria.tsx");
+
+    expect(issues).toHaveLength(5);
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "title",
+        text: "Open help center",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "aria-description",
+        text: "Used for invoices",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "aria-placeholder",
+        text: "Search invoices",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "aria-roledescription",
+        text: "Search field",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "aria-valuetext",
+        text: "Fifty percent",
+      }),
+    );
+  });
+
+  it("flags user-facing attributes written as JSX expressions", async () => {
+    const result = await scanHardcoded(fixturesRoot);
+    const issues = issuesForFile(result.issues, "attr-expression.tsx");
+
+    expect(issues).toHaveLength(2);
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "placeholder",
+        text: "Email",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "jsx-attribute",
+        attributeName: "aria-label",
+        text: "Close",
+      }),
+    );
+  });
+
+  it("flags no-substitution template literals but not templates with substitutions", async () => {
+    const result = await scanHardcoded(fixturesRoot);
+    const issues = issuesForFile(result.issues, "template-literal.tsx");
+
+    expect(issues).toEqual([
+      expect.objectContaining({
+        kind: "jsx-text",
+        text: "Hello",
+      }),
+    ]);
   });
 });
