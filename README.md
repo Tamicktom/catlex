@@ -1,8 +1,8 @@
 # catlex
 
-CLI to validate [next-intl](https://next-intl.dev/)-style translation JSON files against a base locale, and scan JSX/TSX for hardcoded user-visible strings.
+CLI to validate [next-intl](https://next-intl.dev/)-style translation JSON files against a base locale, scan JSX/TSX for hardcoded user-visible strings, and (alpha) fill missing keys with OpenAI.
 
-Catch missing keys before they hit production, optionally fail on keys that exist only in a locale file, and (alpha) flag UI copy that never entered the message files.
+Catch missing keys before they hit production, optionally fail on keys that exist only in a locale file, (alpha) flag UI copy that never entered the message files, and (alpha) propose translations for missing string keys.
 
 ## Install
 
@@ -130,18 +130,46 @@ catlex scan --json
 
 This command is **alpha**: false positives and missed issues may occur. Detection covers JSX text and common user-facing attributes (`placeholder`, `alt`, `title`, aria-*); translation calls like `t("…")` and `<Trans>` children are not flagged.
 
+## AI translate (alpha)
+
+Fill missing string keys by comparing each locale against the base locale and asking OpenAI to propose translations:
+
+```bash
+export OPENAI_API_KEY=sk-...
+catlex translate --dry-run
+catlex translate --yes
+catlex translate --locale pt --model gpt-5.4-mini
+catlex translate --json
+```
+
+| Option | Description |
+|--------|-------------|
+| `--dir <path>` | Messages directory relative to the project root |
+| `--base <locale>` | Base locale file stem (e.g. `en`) |
+| `--cwd <path>` | Project root (default: current directory) |
+| `--locale <locale>` | Target locale (repeatable or comma-separated; default: all non-base) |
+| `--model <id>` | OpenAI model id (default: `gpt-5.4-mini`) |
+| `--dry-run` | Propose translations without writing files |
+| `--yes` | Write files without interactive confirmation |
+| `--json` | Print JSON instead of the interactive terminal UI |
+
+Requires `OPENAI_API_KEY` in the environment. Catlex never stores API keys in config files.
+
+This command is **alpha**: translations may be incorrect and bugs may occur. Only missing **string** leaves are filled; arrays and other non-string values are skipped. Existing locale files are updated in place — new locale files are not created.
+
 ## Exit codes and CI
 
 | Code | Meaning |
 |------|---------|
-| `0` | Validation or scan passed |
-| `1` | Validation/scan failed or an error occurred |
+| `0` | Validation, scan, or translate completed (including cancel / nothing to do) |
+| `1` | Validation/scan failed, missing API key, or an error occurred |
 
 For pipelines, prefer `--json`:
 
 ```bash
 catlex validate --json
 catlex scan --json
+catlex translate --dry-run --json
 ```
 
 ### Add a GitHub Actions workflow

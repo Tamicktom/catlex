@@ -4,6 +4,7 @@ import { Command } from "commander";
 //* Local imports
 import { runInitCiCommand } from "./commands/init-ci.tsx";
 import { runScanCommand } from "./commands/scan.tsx";
+import { runTranslateCommand } from "./commands/translate.tsx";
 import { runValidateCommand } from "./commands/validate.tsx";
 
 async function setExitCodeFrom(run: () => Promise<number>): Promise<void> {
@@ -22,7 +23,7 @@ export function createProgram(): Command {
   program
     .name("catlex")
     .description(
-      "CLI to validate next-intl translation JSON files and scan JSX/TSX for hardcoded strings",
+      "CLI to validate next-intl translation JSON files, scan JSX/TSX for hardcoded strings, and translate missing keys (alpha)",
     )
     .version("0.1.1");
 
@@ -70,6 +71,43 @@ export function createProgram(): Command {
       await setExitCodeFrom(() =>
         runInitCiCommand({
           cwd: options.cwd,
+        }),
+      );
+    });
+
+  program
+    .command("translate")
+    .description("Fill missing translation keys with OpenAI (alpha)")
+    .option("--dir <path>", "Messages directory relative to cwd")
+    .option("--base <locale>", "Base locale file stem (e.g. en)")
+    .option("--cwd <path>", "Project root directory", process.cwd())
+    .option(
+      "--locale <locale>",
+      "Target locale (repeatable or comma-separated)",
+      (value: string, previous: string[]) => {
+        const parts = value
+          .split(",")
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0);
+        return previous.concat(parts);
+      },
+      [] as string[],
+    )
+    .option("--model <id>", "OpenAI model id (default: gpt-5.4-mini)")
+    .option("--dry-run", "Propose translations without writing files", false)
+    .option("--yes", "Write files without interactive confirmation", false)
+    .option("--json", "Print machine-readable JSON instead of Ink UI", false)
+    .action(async (options) => {
+      await setExitCodeFrom(() =>
+        runTranslateCommand({
+          dir: options.dir,
+          base: options.base,
+          cwd: options.cwd,
+          locale: options.locale.length > 0 ? options.locale : undefined,
+          model: options.model,
+          dryRun: options.dryRun === true,
+          yes: options.yes === true,
+          json: options.json === true,
         }),
       );
     });

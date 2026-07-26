@@ -28,6 +28,37 @@ export {
 } from "./core/init-ci/paths.ts";
 export { generateValidateMessagesWorkflow } from "./core/init-ci/workflow.ts";
 export { writeGithubWorkflow } from "./core/init-ci/write.ts";
+export { TRANSLATE_ALPHA_MESSAGE } from "./core/translate/alpha.ts";
+export {
+  collectMissingTranslations,
+  collectTranslationExamples,
+} from "./core/translate/collect.ts";
+export {
+  DEFAULT_OPENAI_TRANSLATE_MODEL,
+  MissingOpenAiApiKeyError,
+  MissingSubmitTranslationsError,
+  assertOpenAiApiKey,
+  createOpenAiTranslator,
+} from "./core/translate/openai.ts";
+export {
+  TRANSLATE_INSTRUCTIONS,
+  buildTranslatePrompt,
+} from "./core/translate/prompt.ts";
+export {
+  extractIcuPlaceholders,
+  submitTranslationsSchema,
+  validateSubmittedTranslations,
+} from "./core/translate/schema.ts";
+export {
+  DEFAULT_TRANSLATE_CHUNK_SIZE,
+  translateMissingKeys,
+} from "./core/translate/translate.ts";
+export { writeTranslatedReports } from "./core/translate/write-reports.ts";
+export {
+  applyTranslationsToTree,
+  setPathInTree,
+} from "./core/messages/unflatten.ts";
+export { writeLocaleMessages } from "./core/messages/write.ts";
 
 export type {
   CatlexConfig,
@@ -52,3 +83,29 @@ export type {
   WriteGithubWorkflowOptions,
   WriteGithubWorkflowResult,
 } from "./core/init-ci/write.ts";
+export type {
+  CollectMissingOptions,
+  CollectMissingResult,
+  MissingTranslation,
+  SkippedTranslation,
+  TranslationExample,
+} from "./core/translate/collect.ts";
+export type { CreateOpenAiTranslatorOptions } from "./core/translate/openai.ts";
+export type {
+  BuildTranslatePromptOptions,
+  PromptMissingItem,
+} from "./core/translate/prompt.ts";
+export type {
+  PlaceholderWarning,
+  SubmitTranslationsInput,
+  ValidateSubmittedResult,
+} from "./core/translate/schema.ts";
+export type {
+  LocaleTranslateReport,
+  TranslateLocaleFn,
+  TranslateLocaleInput,
+  TranslateMissingKeysOptions,
+  TranslateResult,
+  TranslatedItem,
+} from "./core/translate/translate.ts";
+export type { TranslationPatch } from "./core/messages/unflatten.ts";
