@@ -14,11 +14,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install catlex
-        run: curl -fsSL https://github.com/Tamicktom/catlex/releases/latest/download/install.sh | bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/Tamicktom/catlex/releases/latest/download/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Validate translations
-        run: |
-          export PATH="\${HOME}/.local/bin:\${PATH}"
-          catlex validate --json
+        run: catlex validate --json
 `;
 }
