@@ -31,6 +31,7 @@
     "fallow:audit": "bunx --yes fallow@3.9.1 audit --format json --quiet --explain --gate-marker agent"
   },
   "dependencies": {
+    "ai": "^7.0.37",
     "commander": "^14.0.2",
     "ink": "^6.6.0",
     "react": "^19.2.3",
