@@ -144,6 +144,16 @@ catlex validate --json
 catlex scan --json
 ```
 
+### Add a GitHub Actions workflow
+
+Scaffold a workflow that installs the catlex binary and runs `validate --json`:
+
+```bash
+catlex init-ci
+```
+
+This interactively creates `.github/workflows/validate-messages.yml`. If the file already exists, you are asked whether to overwrite it.
+
 ## Building from source
 
 Requires [Bun](https://bun.sh/):
