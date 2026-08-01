@@ -1,10 +1,14 @@
 //* Libraries imports
+import path from "node:path";
 import { render } from "ink";
 
 //* Local imports
 import { Confirm } from "../ui/Confirm.tsx";
 import { TranslateReport } from "../ui/TranslateReport.tsx";
 import { TRANSLATE_ALPHA_MESSAGE, countTranslatedKeys } from "../ui/translate-report-view.ts";
+import { loadConfig } from "../../core/config/load.ts";
+import { loadMessagesDir, splitBaseAndLocales } from "../../core/messages/load.ts";
+import { collectMissingTranslations } from "../../core/translate/collect.ts";
 import {
   MissingOpenAiApiKeyError,
   assertOpenAiApiKey,
@@ -84,6 +88,39 @@ function emitOutput(result: TranslateResult, json: boolean): void {
   renderReport(result);
 }
 
+async function collectMissingTranslationPlan(options: {
+  cwd: string;
+  messagesDir?: string;
+  baseLocale?: string;
+  locales?: string[];
+}): Promise<{
+  baseLocale: string;
+  messagesDir: string;
+  missingCount: number;
+  localeCount: number;
+}> {
+  const config = await loadConfig(options.cwd, {
+    messagesDir: options.messagesDir,
+    baseLocale: options.baseLocale,
+  });
+  const messagesDir = path.resolve(options.cwd, config.messagesDir);
+  const allLocales = await loadMessagesDir(messagesDir);
+  const { base, others } = splitBaseAndLocales(allLocales, config.baseLocale);
+  const collected = collectMissingTranslations({
+    base,
+    locales: others,
+    localeFilter: options.locales,
+  });
+  const localeCount = new Set(collected.missing.map((item) => item.locale)).size;
+
+  return {
+    baseLocale: config.baseLocale,
+    messagesDir: config.messagesDir,
+    missingCount: collected.missing.length,
+    localeCount,
+  };
+}
+
 /**
  * Runs the alpha AI translate command.
  */
@@ -103,6 +140,51 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
       return 1;
     }
     throw error;
+  }
+
+  const plan = await collectMissingTranslationPlan({
+    cwd,
+    messagesDir: options.dir,
+    baseLocale: options.base,
+    locales: options.locale,
+  });
+
+  if (plan.missingCount === 0) {
+    const emptyResult = await translateMissingKeys({
+      cwd,
+      messagesDir: options.dir,
+      baseLocale: options.base,
+      locales: options.locale,
+      dryRun: true,
+      translateLocale:
+        options.translateLocale ??
+        createOpenAiTranslator({
+          model: options.model,
+          env,
+        }),
+    });
+    emitOutput({ ...emptyResult, dryRun }, json);
+    return 0;
+  }
+
+  if (!dryRun && !yes) {
+    const accepted = await confirm(
+      `Run automatic translation for ${plan.missingCount} missing key(s) across ${plan.localeCount} locale(s)?`,
+    );
+    if (!accepted) {
+      emitOutput(
+        {
+          baseLocale: plan.baseLocale,
+          messagesDir: plan.messagesDir,
+          reports: [],
+          writtenFiles: [],
+          cancelled: true,
+          dryRun: false,
+        },
+        json,
+      );
+      return 0;
+    }
   }
 
   const translateLocale =
@@ -131,6 +213,10 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
   if (dryRun) {
     emitOutput(result, json);
     return 0;
+  }
+
+  if (!json) {
+    emitOutput(result, false);
   }
 
   if (!yes) {

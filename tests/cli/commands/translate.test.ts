@@ -8,6 +8,9 @@ import path from "node:path";
 import { runTranslateCommand } from "../../../src/cli/commands/translate.tsx";
 import { TRANSLATE_ALPHA_MESSAGE } from "../../../src/cli/ui/translate-report-view.ts";
 
+//* Types imports
+import type { TranslateLocaleFn } from "../../../src/core/translate/translate.ts";
+
 async function writeMessages(root: string, files: Record<string, unknown>): Promise<void> {
   const messagesDir = path.join(root, "messages");
   await mkdir(messagesDir, { recursive: true });
@@ -18,6 +21,25 @@ async function writeMessages(root: string, files: Record<string, unknown>): Prom
       "utf8",
     );
   }
+}
+
+function createTranslateSpy(
+  impl: TranslateLocaleFn = async (input) => ({
+    locale: input.targetLocale,
+    translations: input.missing.map((item) => ({
+      path: item.path,
+      value: `PT:${item.baseValue}`,
+    })),
+  }),
+): { translateLocale: TranslateLocaleFn; callCount: () => number } {
+  let calls = 0;
+  return {
+    callCount: () => calls,
+    translateLocale: async (input) => {
+      calls += 1;
+      return impl(input);
+    },
+  };
 }
 
 describe("runTranslateCommand", () => {
@@ -96,6 +118,8 @@ describe("runTranslateCommand", () => {
       pt: { welcome: "Bem-vindo" },
     });
     const before = await readFile(path.join(cwd, "messages", "pt.json"), "utf8");
+    const confirmMessages: string[] = [];
+    const translator = createTranslateSpy();
     const log = captureLog();
 
     const exitCode = await runTranslateCommand({
@@ -103,16 +127,16 @@ describe("runTranslateCommand", () => {
       json: true,
       dryRun: true,
       env: { OPENAI_API_KEY: "sk-test" },
-      translateLocale: async (input) => ({
-        locale: input.targetLocale,
-        translations: input.missing.map((item) => ({
-          path: item.path,
-          value: `PT:${item.baseValue}`,
-        })),
-      }),
+      confirm: async (message) => {
+        confirmMessages.push(message);
+        return false;
+      },
+      translateLocale: translator.translateLocale,
     });
 
     expect(exitCode).toBe(0);
+    expect(confirmMessages).toEqual([]);
+    expect(translator.callCount()).toBe(1);
     expect(await readFile(path.join(cwd, "messages", "pt.json"), "utf8")).toBe(before);
     const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
     expect(payload.dryRun).toBe(true);
@@ -127,6 +151,10 @@ describe("runTranslateCommand", () => {
       pt: { welcome: "Bem-vindo" },
     });
     const confirmMessages: string[] = [];
+    const translator = createTranslateSpy(async () => ({
+      locale: "pt",
+      translations: [{ path: "about", value: "Sobre" }],
+    }));
     captureLog();
 
     const exitCode = await runTranslateCommand({
@@ -138,44 +166,124 @@ describe("runTranslateCommand", () => {
         confirmMessages.push(message);
         return false;
       },
-      translateLocale: async () => ({
-        locale: "pt",
-        translations: [{ path: "about", value: "Sobre" }],
-      }),
+      translateLocale: translator.translateLocale,
     });
 
     expect(exitCode).toBe(0);
     expect(confirmMessages).toEqual([]);
+    expect(translator.callCount()).toBe(1);
     expect(JSON.parse(await readFile(path.join(cwd, "messages", "pt.json"), "utf8"))).toEqual({
       welcome: "Bem-vindo",
       about: "Sobre",
     });
   });
 
-  it("leaves files unchanged when confirm is declined", async () => {
-    const cwd = await mkdtemp(path.join(tmpdir(), "catlex-translate-cli-no-"));
+  it("leaves files unchanged and skips the AI when automatic translation is declined", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "catlex-translate-cli-pre-no-"));
     await writeMessages(cwd, {
       en: { about: "About", welcome: "Welcome" },
       pt: { welcome: "Bem-vindo" },
     });
     const before = await readFile(path.join(cwd, "messages", "pt.json"), "utf8");
+    const confirmMessages: string[] = [];
+    const translator = createTranslateSpy();
     const log = captureLog();
 
     const exitCode = await runTranslateCommand({
       cwd,
       json: true,
       env: { OPENAI_API_KEY: "sk-test" },
-      confirm: async () => false,
-      translateLocale: async () => ({
-        locale: "pt",
-        translations: [{ path: "about", value: "Sobre" }],
-      }),
+      confirm: async (message) => {
+        confirmMessages.push(message);
+        return false;
+      },
+      translateLocale: translator.translateLocale,
     });
 
     expect(exitCode).toBe(0);
+    expect(translator.callCount()).toBe(0);
+    expect(confirmMessages).toHaveLength(1);
+    expect(confirmMessages[0]).toMatch(/automatic translation/i);
+    expect(confirmMessages[0]).toMatch(/missing key/i);
+    expect(confirmMessages[0]).not.toMatch(/^Write /);
     expect(await readFile(path.join(cwd, "messages", "pt.json"), "utf8")).toBe(before);
     const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
     expect(payload.cancelled).toBe(true);
     expect(payload.writtenFiles).toEqual([]);
+  });
+
+  it("calls the AI then leaves files unchanged when save is declined", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "catlex-translate-cli-save-no-"));
+    await writeMessages(cwd, {
+      en: { about: "About", welcome: "Welcome" },
+      pt: { welcome: "Bem-vindo" },
+    });
+    const before = await readFile(path.join(cwd, "messages", "pt.json"), "utf8");
+    const confirmMessages: string[] = [];
+    const translator = createTranslateSpy(async () => ({
+      locale: "pt",
+      translations: [{ path: "about", value: "Sobre" }],
+    }));
+    const log = captureLog();
+
+    const exitCode = await runTranslateCommand({
+      cwd,
+      json: true,
+      env: { OPENAI_API_KEY: "sk-test" },
+      confirm: async (message) => {
+        confirmMessages.push(message);
+        return confirmMessages.length === 1;
+      },
+      translateLocale: translator.translateLocale,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(translator.callCount()).toBe(1);
+    expect(confirmMessages).toHaveLength(2);
+    expect(confirmMessages[0]).toMatch(/automatic translation/i);
+    expect(confirmMessages[1]).toMatch(/^Write /);
+    expect(await readFile(path.join(cwd, "messages", "pt.json"), "utf8")).toBe(before);
+    const payload = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+    expect(payload.cancelled).toBe(true);
+    expect(payload.translatedCount).toBe(1);
+    expect(payload.reports[0].translated).toEqual([
+      { path: "about", value: "Sobre", baseValue: "About" },
+    ]);
+    expect(payload.writtenFiles).toEqual([]);
+  });
+
+  it("writes files when automatic translation and save are both accepted", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "catlex-translate-cli-both-yes-"));
+    await writeMessages(cwd, {
+      en: { about: "About", welcome: "Welcome" },
+      pt: { welcome: "Bem-vindo" },
+    });
+    const confirmMessages: string[] = [];
+    const translator = createTranslateSpy(async () => ({
+      locale: "pt",
+      translations: [{ path: "about", value: "Sobre" }],
+    }));
+    captureLog();
+
+    const exitCode = await runTranslateCommand({
+      cwd,
+      json: true,
+      env: { OPENAI_API_KEY: "sk-test" },
+      confirm: async (message) => {
+        confirmMessages.push(message);
+        return true;
+      },
+      translateLocale: translator.translateLocale,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(translator.callCount()).toBe(1);
+    expect(confirmMessages).toHaveLength(2);
+    expect(confirmMessages[0]).toMatch(/automatic translation/i);
+    expect(confirmMessages[1]).toMatch(/^Write /);
+    expect(JSON.parse(await readFile(path.join(cwd, "messages", "pt.json"), "utf8"))).toEqual({
+      welcome: "Bem-vindo",
+      about: "Sobre",
+    });
   });
 });

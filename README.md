@@ -150,10 +150,12 @@ catlex translate --json
 | `--locale <locale>` | Target locale (repeatable or comma-separated; default: all non-base) |
 | `--model <id>` | OpenAI model id (default: `gpt-5.4-mini`) |
 | `--dry-run` | Propose translations without writing files |
-| `--yes` | Write files without interactive confirmation |
+| `--yes` | Skip both interactive prompts and write files |
 | `--json` | Print JSON instead of the interactive terminal UI |
 
 Requires `OPENAI_API_KEY` in the environment. Catlex never stores API keys in config files.
+
+In interactive mode (no `--yes` / `--dry-run`), catlex asks whether to run automatic translation **before** calling the model, then shows the proposals and asks again before writing files. `--yes` skips both prompts.
 
 This command is **alpha**: translations may be incorrect and bugs may occur. Only missing **string** leaves are filled; arrays and other non-string values are skipped. Existing locale files are updated in place — new locale files are not created.
 
