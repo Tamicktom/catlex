@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { runInitCiCommand } from "./commands/init-ci.tsx";
 import { runScanCommand } from "./commands/scan.tsx";
 import { runTranslateCommand } from "./commands/translate.tsx";
+import { runTranslateReviewCommand } from "./commands/translate-review.tsx";
 import { runValidateCommand } from "./commands/validate.tsx";
 
 async function setExitCodeFrom(run: () => Promise<number>): Promise<void> {
@@ -15,6 +16,14 @@ async function setExitCodeFrom(run: () => Promise<number>): Promise<void> {
     console.error(`Error: ${message}`);
     process.exitCode = 1;
   }
+}
+
+function parseLocaleOption(value: string, previous: string[]): string[] {
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  return previous.concat(parts);
 }
 
 export function createProgram(): Command {
@@ -75,7 +84,7 @@ export function createProgram(): Command {
       );
     });
 
-  program
+  const translate = program
     .command("translate")
     .description("Fill missing translation keys with OpenAI (alpha)")
     .option("--dir <path>", "Messages directory relative to cwd")
@@ -84,13 +93,7 @@ export function createProgram(): Command {
     .option(
       "--locale <locale>",
       "Target locale (repeatable or comma-separated)",
-      (value: string, previous: string[]) => {
-        const parts = value
-          .split(",")
-          .map((part) => part.trim())
-          .filter((part) => part.length > 0);
-        return previous.concat(parts);
-      },
+      parseLocaleOption,
       [] as string[],
     )
     .option("--model <id>", "OpenAI model id (default: gpt-5.4-mini)")
@@ -106,6 +109,41 @@ export function createProgram(): Command {
           locale: options.locale.length > 0 ? options.locale : undefined,
           model: options.model,
           dryRun: options.dryRun === true,
+          yes: options.yes === true,
+          json: options.json === true,
+        }),
+      );
+    });
+
+  translate
+    .command("review")
+    .description(
+      "Review translations with OpenAI (alpha). Prefer --since <ref> in CI to limit scope to changed keys.",
+    )
+    .option("--dir <path>", "Messages directory relative to cwd")
+    .option("--base <locale>", "Base locale file stem (e.g. en)")
+    .option("--cwd <path>", "Project root directory", process.cwd())
+    .option(
+      "--locale <locale>",
+      "Target locale (repeatable or comma-separated)",
+      parseLocaleOption,
+      [] as string[],
+    )
+    .option("--model <id>", "OpenAI model id (default: gpt-5.4-mini)")
+    .option("--since <ref>", "Only review keys changed between <ref> and HEAD (recommended in CI)")
+    .option("--auto-fix", "Propose fixes for wrong/missing translations", false)
+    .option("--yes", "Apply auto-fix writes without interactive confirmation", false)
+    .option("--json", "Print machine-readable JSON instead of Ink UI", false)
+    .action(async (options) => {
+      await setExitCodeFrom(() =>
+        runTranslateReviewCommand({
+          dir: options.dir,
+          base: options.base,
+          cwd: options.cwd,
+          locale: options.locale.length > 0 ? options.locale : undefined,
+          model: options.model,
+          since: options.since,
+          autoFix: options.autoFix === true,
           yes: options.yes === true,
           json: options.json === true,
         }),

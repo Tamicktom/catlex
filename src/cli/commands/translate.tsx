@@ -3,8 +3,8 @@ import path from "node:path";
 import { render } from "ink";
 
 //* Local imports
-import { Confirm } from "../ui/Confirm.tsx";
 import { TranslateReport } from "../ui/TranslateReport.tsx";
+import { promptConfirm, type ConfirmFn } from "../ui/prompt-confirm.tsx";
 import { TRANSLATE_ALPHA_MESSAGE, countTranslatedKeys } from "../ui/translate-report-view.ts";
 import { loadConfig } from "../../core/config/load.ts";
 import { loadMessagesDir, splitBaseAndLocales } from "../../core/messages/load.ts";
@@ -21,7 +21,7 @@ import { writeTranslatedReports } from "../../core/translate/write-reports.ts";
 import type { TranslateLocaleFn } from "../../core/translate/translate.ts";
 import type { TranslateResult } from "../../core/translate/translate.ts";
 
-export type ConfirmFn = (message: string) => Promise<boolean>;
+export type { ConfirmFn };
 
 export type TranslateCommandOptions = {
   dir?: string;
@@ -36,26 +36,6 @@ export type TranslateCommandOptions = {
   translateLocale?: TranslateLocaleFn;
   env?: NodeJS.ProcessEnv | Record<string, string | undefined>;
 };
-
-async function promptConfirm(message: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    let settled = false;
-
-    const instance = render(
-      <Confirm
-        message={message}
-        onResolve={(accepted) => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          instance.unmount();
-          resolve(accepted);
-        }}
-      />,
-    );
-  });
-}
 
 function printJson(result: TranslateResult): void {
   const translatedCount = countTranslatedKeys(result);
@@ -121,6 +101,65 @@ async function collectMissingTranslationPlan(options: {
   };
 }
 
+function resolveTranslator(
+  options: TranslateCommandOptions,
+  env: NodeJS.ProcessEnv | Record<string, string | undefined>,
+): TranslateLocaleFn {
+  return (
+    options.translateLocale ??
+    createOpenAiTranslator({
+      model: options.model,
+      env,
+    })
+  );
+}
+
+function requireApiKey(env: NodeJS.ProcessEnv | Record<string, string | undefined>): boolean {
+  try {
+    assertOpenAiApiKey(env);
+    return true;
+  } catch (error) {
+    if (error instanceof MissingOpenAiApiKeyError) {
+      console.error(`Error: ${error.message}`);
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function confirmStartTranslation(
+  plan: { missingCount: number; localeCount: number },
+  confirm: ConfirmFn,
+): Promise<boolean> {
+  return confirm(
+    `Run automatic translation for ${plan.missingCount} missing key(s) across ${plan.localeCount} locale(s)?`,
+  );
+}
+
+async function confirmWriteTranslations(
+  result: TranslateResult,
+  translatedCount: number,
+  confirm: ConfirmFn,
+): Promise<boolean> {
+  return confirm(
+    `Write ${translatedCount} translation(s) to ${result.reports.filter((report) => report.translated.length > 0).length} locale file(s)?`,
+  );
+}
+
+function cancelledTranslateResult(plan: {
+  baseLocale: string;
+  messagesDir: string;
+}): TranslateResult {
+  return {
+    baseLocale: plan.baseLocale,
+    messagesDir: plan.messagesDir,
+    reports: [],
+    writtenFiles: [],
+    cancelled: true,
+    dryRun: false,
+  };
+}
+
 /**
  * Runs the alpha AI translate command.
  */
@@ -132,14 +171,8 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
   const confirm = options.confirm ?? promptConfirm;
   const env = options.env ?? process.env;
 
-  try {
-    assertOpenAiApiKey(env);
-  } catch (error) {
-    if (error instanceof MissingOpenAiApiKeyError) {
-      console.error(`Error: ${error.message}`);
-      return 1;
-    }
-    throw error;
+  if (!requireApiKey(env)) {
+    return 1;
   }
 
   const plan = await collectMissingTranslationPlan({
@@ -148,6 +181,7 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
     baseLocale: options.base,
     locales: options.locale,
   });
+  const translateLocale = resolveTranslator(options, env);
 
   if (plan.missingCount === 0) {
     const emptyResult = await translateMissingKeys({
@@ -156,43 +190,16 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
       baseLocale: options.base,
       locales: options.locale,
       dryRun: true,
-      translateLocale:
-        options.translateLocale ??
-        createOpenAiTranslator({
-          model: options.model,
-          env,
-        }),
+      translateLocale,
     });
     emitOutput({ ...emptyResult, dryRun }, json);
     return 0;
   }
 
-  if (!dryRun && !yes) {
-    const accepted = await confirm(
-      `Run automatic translation for ${plan.missingCount} missing key(s) across ${plan.localeCount} locale(s)?`,
-    );
-    if (!accepted) {
-      emitOutput(
-        {
-          baseLocale: plan.baseLocale,
-          messagesDir: plan.messagesDir,
-          reports: [],
-          writtenFiles: [],
-          cancelled: true,
-          dryRun: false,
-        },
-        json,
-      );
-      return 0;
-    }
+  if (!dryRun && !yes && !(await confirmStartTranslation(plan, confirm))) {
+    emitOutput(cancelledTranslateResult(plan), json);
+    return 0;
   }
-
-  const translateLocale =
-    options.translateLocale ??
-    createOpenAiTranslator({
-      model: options.model,
-      env,
-    });
 
   let result = await translateMissingKeys({
     cwd,
@@ -204,14 +211,8 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
   });
 
   const translatedCount = countTranslatedKeys(result);
-
-  if (translatedCount === 0) {
+  if (translatedCount === 0 || dryRun) {
     emitOutput({ ...result, dryRun }, json);
-    return 0;
-  }
-
-  if (dryRun) {
-    emitOutput(result, json);
     return 0;
   }
 
@@ -219,29 +220,13 @@ export async function runTranslateCommand(options: TranslateCommandOptions): Pro
     emitOutput(result, false);
   }
 
-  if (!yes) {
-    const accepted = await confirm(
-      `Write ${translatedCount} translation(s) to ${result.reports.filter((report) => report.translated.length > 0).length} locale file(s)?`,
-    );
-    if (!accepted) {
-      result = {
-        ...result,
-        cancelled: true,
-        dryRun: false,
-        writtenFiles: [],
-      };
-      emitOutput(result, json);
-      return 0;
-    }
+  if (!yes && !(await confirmWriteTranslations(result, translatedCount, confirm))) {
+    emitOutput({ ...result, cancelled: true, dryRun: false, writtenFiles: [] }, json);
+    return 0;
   }
 
   const writtenFiles = await writeTranslatedReports(result.reports);
-  result = {
-    ...result,
-    dryRun: false,
-    cancelled: false,
-    writtenFiles,
-  };
+  result = { ...result, dryRun: false, cancelled: false, writtenFiles };
   emitOutput(result, json);
   return 0;
 }

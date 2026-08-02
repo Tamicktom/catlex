@@ -44,6 +44,7 @@ describe("createOpenAiTranslator", () => {
           {
             toolCallId: "call-1",
             messages: [],
+            context: {},
           },
         );
 

@@ -1,5 +1,6 @@
 //* Local imports
 import { compareFlatMessages } from "../messages/compare.ts";
+import { sortByLocalePath } from "./locale-path.ts";
 
 //* Types imports
 import type { LocaleMessages } from "../types.ts";
@@ -71,23 +72,10 @@ export function collectMissingTranslations(options: CollectMissingOptions): Coll
     }
   }
 
-  missing.sort((a, b) => {
-    const localeCmp = a.locale.localeCompare(b.locale);
-    if (localeCmp !== 0) {
-      return localeCmp;
-    }
-    return a.path.localeCompare(b.path);
-  });
-
-  skipped.sort((a, b) => {
-    const localeCmp = a.locale.localeCompare(b.locale);
-    if (localeCmp !== 0) {
-      return localeCmp;
-    }
-    return a.path.localeCompare(b.path);
-  });
-
-  return { missing, skipped };
+  return {
+    missing: sortByLocalePath(missing),
+    skipped: sortByLocalePath(skipped),
+  };
 }
 
 export type CollectExamplesOptions = {

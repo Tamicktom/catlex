@@ -9,8 +9,19 @@ export {
 } from "./core/messages/compare.ts";
 export {
   loadMessagesDir,
+  parseLocaleMessages,
   splitBaseAndLocales,
+  MessagesLoadError,
 } from "./core/messages/load.ts";
+export { diffFlatMessages } from "./core/messages/diff-flat.ts";
+export {
+  assertGitRepo,
+  assertRefExists,
+  listFilesAtRef,
+  readFileAtRef,
+  GitError,
+} from "./core/git/show.ts";
+export { runGit } from "./core/git/run.ts";
 export { runValidators, getValidators } from "./core/validators/registry.ts";
 export {
   validateTranslations,
@@ -28,7 +39,10 @@ export {
 } from "./core/init-ci/paths.ts";
 export { generateValidateMessagesWorkflow } from "./core/init-ci/workflow.ts";
 export { writeGithubWorkflow } from "./core/init-ci/write.ts";
-export { TRANSLATE_ALPHA_MESSAGE } from "./core/translate/alpha.ts";
+export {
+  TRANSLATE_ALPHA_MESSAGE,
+  REVIEW_ALPHA_MESSAGE,
+} from "./core/translate/alpha.ts";
 export {
   collectMissingTranslations,
   collectTranslationExamples,
@@ -54,6 +68,24 @@ export {
   translateMissingKeys,
 } from "./core/translate/translate.ts";
 export { writeTranslatedReports } from "./core/translate/write-reports.ts";
+export { resolveReviewScope } from "./core/translate/review-scope.ts";
+export {
+  REVIEW_INSTRUCTIONS,
+  buildReviewPrompt,
+} from "./core/translate/review-prompt.ts";
+export {
+  submitTranslationReviewsSchema,
+  validateSubmittedReviews,
+} from "./core/translate/review-schema.ts";
+export {
+  MissingSubmitTranslationReviewsError,
+  createOpenAiReviewer,
+} from "./core/translate/review-openai.ts";
+export {
+  countReviewFixes,
+  reviewTranslations,
+  withReviewFixesApplied,
+} from "./core/translate/review.ts";
 export {
   applyTranslationsToTree,
   setPathInTree,
@@ -109,3 +141,41 @@ export type {
   TranslatedItem,
 } from "./core/translate/translate.ts";
 export type { TranslationPatch } from "./core/messages/unflatten.ts";
+export type { ParseLocaleMessagesOptions } from "./core/messages/load.ts";
+export type {
+  FlatDiffAdded,
+  FlatDiffModified,
+  FlatDiffRemoved,
+  FlatDiffResult,
+} from "./core/messages/diff-flat.ts";
+export type { GitRunner, GitRunResult } from "./core/git/run.ts";
+export type {
+  ReviewChangeSource,
+  ReviewRemovedPath,
+  ReviewScopeResult,
+  ReviewScopeSkipped,
+  ReviewTarget,
+  ResolveReviewScopeOptions,
+} from "./core/translate/review-scope.ts";
+export type {
+  BuildReviewPromptOptions,
+  ReviewPromptItem,
+} from "./core/translate/review-prompt.ts";
+export type {
+  AcceptedReview,
+  SubmitTranslationReviewsInput,
+  ValidateSubmittedReviewsOptions,
+  ValidateSubmittedReviewsResult,
+} from "./core/translate/review-schema.ts";
+export type {
+  CreateOpenAiReviewerOptions,
+  ReviewLocaleFn,
+  ReviewLocaleInput,
+} from "./core/translate/review-openai.ts";
+export type {
+  LocaleReviewReport,
+  ReviewItemResult,
+  ReviewItemVerdict,
+  ReviewResult,
+  ReviewTranslationsOptions,
+} from "./core/translate/review.ts";

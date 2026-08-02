@@ -19,6 +19,42 @@ function localeFromFileName(fileName: string): string {
   return path.basename(fileName, ".json");
 }
 
+export type ParseLocaleMessagesOptions = {
+  locale: string;
+  filePath: string;
+};
+
+/**
+ * Parses raw JSON text into LocaleMessages with a flattened key map.
+ */
+export function parseLocaleMessages(
+  raw: string,
+  options: ParseLocaleMessagesOptions,
+): LocaleMessages {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new MessagesLoadError(`Invalid JSON: ${options.filePath}`);
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new MessagesLoadError(
+      `Translation file must be a JSON object: ${options.filePath}`,
+    );
+  }
+
+  const tree = parsed as MessageTree;
+
+  return {
+    locale: options.locale,
+    filePath: options.filePath,
+    tree,
+    flat: flattenMessages(tree),
+  };
+}
+
 async function loadLocaleFile(filePath: string): Promise<LocaleMessages> {
   let raw: string;
 
@@ -28,29 +64,10 @@ async function loadLocaleFile(filePath: string): Promise<LocaleMessages> {
     throw new MessagesLoadError(`Cannot read translation file: ${filePath}`);
   }
 
-  let parsed: unknown;
-
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new MessagesLoadError(`Invalid JSON: ${filePath}`);
-  }
-
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new MessagesLoadError(
-      `Translation file must be a JSON object: ${filePath}`,
-    );
-  }
-
-  const tree = parsed as MessageTree;
-  const locale = localeFromFileName(filePath);
-
-  return {
-    locale,
+  return parseLocaleMessages(raw, {
+    locale: localeFromFileName(filePath),
     filePath,
-    tree,
-    flat: flattenMessages(tree),
-  };
+  });
 }
 
 /**
