@@ -227,15 +227,24 @@ catlex translate --dry-run --json
 catlex translate review --since origin/main --json
 ```
 
-### Add a GitHub Actions workflow
+### Add GitHub Actions workflows
 
-Scaffold a workflow that installs the catlex binary and runs `validate --json`:
+Interactively scaffold one or more workflows (Space to toggle, Enter to confirm):
 
 ```bash
-catlex init-ci
+catlex ci
 ```
 
-This interactively creates `.github/workflows/validate-messages.yml`. If the file already exists, you are asked whether to overwrite it.
+(`init-ci` remains as an alias of `ci`.)
+
+| Workflow | File | What it does |
+|----------|------|--------------|
+| Validate messages | `.github/workflows/validate-messages.yml` | `catlex validate --json` |
+| Review translations | `.github/workflows/review-translations.yml` | `catlex translate review --since … --json` (gate only) |
+| Review, auto-fix, and commit | `.github/workflows/review-fix-translations.yml` | Review with `--auto-fix --yes`, then commit |
+| Fill missing translations and commit | `.github/workflows/translate-fill.yml` | `catlex translate --yes`, then commit |
+
+AI workflows require repository secret `OPENAI_API_KEY`. Auto-commit workflows set `permissions: contents: write` and use `stefanzweifel/git-auto-commit-action` (same-repo branches; fork PRs typically cannot push). If a selected file already exists, you are asked whether to overwrite it.
 
 ## Building from source
 

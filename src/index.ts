@@ -34,11 +34,23 @@ export {
   USER_FACING_ATTRS,
 } from "./core/scan/filters.ts";
 export {
+  CI_WORKFLOW_OPTIONS,
+  REVIEW_FIX_WORKFLOW_RELATIVE_PATH,
+  REVIEW_WORKFLOW_RELATIVE_PATH,
+  TRANSLATE_WORKFLOW_RELATIVE_PATH,
+  VALIDATE_WORKFLOW_RELATIVE_PATH,
   WORKFLOW_RELATIVE_PATH,
-  resolveWorkflowPath,
-} from "./core/init-ci/paths.ts";
-export { generateValidateMessagesWorkflow } from "./core/init-ci/workflow.ts";
-export { writeGithubWorkflow } from "./core/init-ci/write.ts";
+  getCiWorkflowOption,
+} from "./core/ci/kinds.ts";
+export { resolveWorkflowPath } from "./core/ci/paths.ts";
+export {
+  generateReviewFixTranslationsWorkflow,
+  generateReviewTranslationsWorkflow,
+  generateTranslateFillWorkflow,
+  generateValidateMessagesWorkflow,
+  generateWorkflow,
+} from "./core/ci/workflows.ts";
+export { writeGithubWorkflow, writeGithubWorkflows } from "./core/ci/write.ts";
 export {
   TRANSLATE_ALPHA_MESSAGE,
   REVIEW_ALPHA_MESSAGE,
@@ -111,10 +123,12 @@ export type {
   HardcodedIssueKind,
   ScanResult,
 } from "./core/scan/types.ts";
+export type { CiWorkflowKind, CiWorkflowOption } from "./core/ci/kinds.ts";
 export type {
   WriteGithubWorkflowOptions,
   WriteGithubWorkflowResult,
-} from "./core/init-ci/write.ts";
+  WriteGithubWorkflowsOptions,
+} from "./core/ci/write.ts";
 export type {
   CollectMissingOptions,
   CollectMissingResult,

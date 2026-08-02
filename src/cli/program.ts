@@ -2,7 +2,7 @@
 import { Command } from "commander";
 
 //* Local imports
-import { runInitCiCommand } from "./commands/init-ci.tsx";
+import { runCiCommand } from "./commands/ci.tsx";
 import { runScanCommand } from "./commands/scan.tsx";
 import { runTranslateCommand } from "./commands/translate.tsx";
 import { runTranslateReviewCommand } from "./commands/translate-review.tsx";
@@ -73,12 +73,13 @@ export function createProgram(): Command {
     });
 
   program
-    .command("init-ci")
-    .description("Add a GitHub Actions workflow that installs catlex and runs validate")
+    .command("ci")
+    .alias("init-ci")
+    .description("Interactively add GitHub Actions workflows for catlex")
     .option("--cwd <path>", "Project root directory", process.cwd())
     .action(async (options) => {
       await setExitCodeFrom(() =>
-        runInitCiCommand({
+        runCiCommand({
           cwd: options.cwd,
         }),
       );
